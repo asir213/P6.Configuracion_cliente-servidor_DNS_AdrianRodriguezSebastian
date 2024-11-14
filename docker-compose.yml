@@ -1,0 +1,48 @@
+services:
+  asir_bind9:
+    container_name: asir_bind9
+    # usamos esta imagen para poder ver los logs
+    # la imagen de internetsystemsconsortium/bind9
+    # no muestra los logs
+    image: ubuntu/bind9
+    # especificamos la plataforma de la imagen
+    # es posible conflicto cuando el host es 'arm'
+    # ya que no existe una imagen para esa plataforma
+    platform: linux/amd64
+    ports:
+      - 54:53
+    networks:
+      bind9_subnet:
+        ipv4_address: 172.28.5.1
+    volumes:
+      - ./conf:/etc/bind/
+      - ./zonas:/var/lib/bind/
+
+
+
+
+
+  cliente:
+    container_name: cliente
+    image: alpine
+   
+    tty: true
+    stdin_open: true
+    # configuramos para que el cliente use nuestro dns
+    dns:
+      - 172.28.5.1
+    networks:
+      bind9_subnet:
+        ipv4_address: 172.28.5.2
+    
+
+
+    
+networks:
+  bind9_subnet:
+      driver: bridge  # Tipo de red 'bridge'
+      ipam:
+        config:
+        - subnet: "172.28.0.0/16"  # Definir el rango de subred
+          ip_range: "172.28.5.0/24"  # Rango de IPs para los contenedores
+          gateway: "172.28.5.254"  # Puerta de enlace de la red
